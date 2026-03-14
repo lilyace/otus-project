@@ -4,8 +4,11 @@
     {
         static async Task Main(string[] args)
         {
-            var server = new TcpServer();
-            await server.StartAsync();
+            using (var store = new ParsingData.SimpleStore())
+            {
+                var server = new TcpServer(store);
+                await server.StartAsync();
+            }
         }
     }
 }

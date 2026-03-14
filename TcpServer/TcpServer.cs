@@ -9,6 +9,12 @@ namespace TcpServer
     public class TcpServer
     {
         ArrayPool<byte> pool = ArrayPool<byte>.Shared;
+        private readonly SimpleStore _store;
+
+        public TcpServer(SimpleStore store)
+        {
+            _store = store;
+        }
 
         public async Task StartAsync()
         {
@@ -38,19 +44,43 @@ namespace TcpServer
                         if (bytesCount == 0)
                             break;
 
-                        var text = Encoding.UTF8.GetString(buffer, 0, buffer.Length);
-                        var separatorInd = text.IndexOf('\n');
-                        var spanText = text.AsSpan();
+                        var returnCarriage = (byte)'\n';
+                        var separatorInd = Array.IndexOf(buffer, returnCarriage);
+                        var spanText = buffer.AsSpan();
                         while (separatorInd != -1)
                         {
                             var rec = spanText.Slice(0, separatorInd);
 
                             var result = CommandParser.Parse(rec);
-                            Console.WriteLine($"command: {result.Command}, key: {result.Key}, value: {result.Value}");
+
+                            switch (result.Command) 
+                            {
+                                case "GET":
+                                    var value = _store.Get(result.Key.ToString());
+                                    byte[] answer = value ?? Encoding.UTF8.GetBytes("null\r\n");
+                                    clientSocket.Send(answer);
+                                    break;
+                                case "SET":
+                                    _store.Set(result.Key.ToString(), result.Value.ToArray());
+                                    clientSocket.Send(Encoding.UTF8.GetBytes("Ok"));
+                                    break;
+                                case "DELETE":
+                                    _store.Delete(result.Key.ToString());
+                                    clientSocket.Send(Encoding.UTF8.GetBytes("Ok"));
+                                    break;
+                                default:
+                                    clientSocket.Send(Encoding.UTF8.GetBytes("Error: Unknown command"));
+                                    break;
+                            }
+                           // Console.WriteLine($"command: {result.Command}, key: {result.Key}, value: {Encoding.UTF8.GetString(result.Value)}");
 
                             spanText = spanText.Slice(separatorInd + 1);
-                            separatorInd = spanText.IndexOf("\n");
+                            separatorInd = spanText.IndexOf(returnCarriage);
                         }
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
                     }
                     finally
                     {
