@@ -47,35 +47,16 @@ namespace TcpServer
                         var returnCarriage = (byte)'\n';
                         var separatorInd = Array.IndexOf(buffer, returnCarriage);
                         var spanText = buffer.AsSpan();
-                        while (separatorInd != -1)
+                        var startIndex = 0;
+                        for(int i=0; i<bytesCount; i++)
                         {
-                            var rec = spanText.Slice(0, separatorInd);
-
-                            var result = CommandParser.Parse(rec);
-
-                            switch (result.Command) 
+                            if (buffer[i] != returnCarriage)
+                                continue;
+                            else
                             {
-                                case "GET":
-                                    var value = _store.Get(result.Key.ToString());
-                                    byte[] answer = value ?? Encoding.UTF8.GetBytes("null\r\n");
-                                    clientSocket.Send(answer);
-                                    break;
-                                case "SET":
-                                    _store.Set(result.Key.ToString(), result.Value.ToArray());
-                                    clientSocket.Send(Encoding.UTF8.GetBytes("Ok"));
-                                    break;
-                                case "DELETE":
-                                    _store.Delete(result.Key.ToString());
-                                    clientSocket.Send(Encoding.UTF8.GetBytes("Ok"));
-                                    break;
-                                default:
-                                    clientSocket.Send(Encoding.UTF8.GetBytes("Error: Unknown command"));
-                                    break;
+                                await ProcessDataAsync(buffer, startIndex, i, clientSocket);
+                                startIndex = i;
                             }
-                           // Console.WriteLine($"command: {result.Command}, key: {result.Key}, value: {Encoding.UTF8.GetString(result.Value)}");
-
-                            spanText = spanText.Slice(separatorInd + 1);
-                            separatorInd = spanText.IndexOf(returnCarriage);
                         }
                     }
                     catch(Exception ex)
@@ -96,6 +77,32 @@ namespace TcpServer
             {
                 clientSocket.Shutdown(SocketShutdown.Both);
                 clientSocket.Close();
+            }
+        }
+
+        private async Task ProcessDataAsync(byte[] buffer, int startIndex, int endIndex, Socket clientSocket)
+        {
+            var rec = buffer.AsSpan().Slice(startIndex, endIndex);
+            var result = CommandParser.Parse(rec);
+
+            switch (result.Command)
+            {
+                case "GET":
+                    var value = _store.Get(result.Key.ToString());
+                    byte[] answer = value ?? Encoding.UTF8.GetBytes("null\r\n");
+                    await clientSocket.SendAsync(answer);
+                    break;
+                case "SET":
+                    _store.Set(result.Key.ToString(), result.Value.ToArray());
+                    await clientSocket.SendAsync(Encoding.UTF8.GetBytes("Ok"));
+                    break;
+                case "DELETE":
+                    _store.Delete(result.Key.ToString());
+                    await clientSocket.SendAsync(Encoding.UTF8.GetBytes("Ok"));
+                    break;
+                default:
+                    await clientSocket.SendAsync(Encoding.UTF8.GetBytes("Error: Unknown command"));
+                    break;
             }
         }
     }

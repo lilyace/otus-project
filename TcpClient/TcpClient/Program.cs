@@ -13,8 +13,8 @@ namespace TcpClient
                 "GET 123\n",
                 "GET hello\n",
                 "SET bye\n",
-                "DELETE 123\n",
-                "GET 123\n"
+                "DELETE hello\n",
+                "GET hello\n"
             };
 
             using var clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);

@@ -47,6 +47,13 @@ namespace ParsingData
                     if (value.Contains(space))
                         return new DataInfo();
                     return new DataInfo(command, Encoding.UTF8.GetString(key), value);
+                case "DELETE":
+                    var delKey = textSpan.Slice(ind + 1); ;
+                    //если кроме ключа в DELETE передали что-то еще через пробел
+                    if (delKey.Contains(space))
+                        return new DataInfo();
+
+                    return new DataInfo(command, Encoding.UTF8.GetString(delKey), default);
                 default:
                     return new DataInfo();
             }
