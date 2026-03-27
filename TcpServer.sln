@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParsingData.Tests", "Parsin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParsingData", "ParsingData\ParsingData.csproj", "{708C7DC9-38C2-4F5E-B924-A41F13606F53}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadTests", "LoadTests\LoadTests.csproj", "{FB569EA6-3DE1-416E-B01B-A015B5B405CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{708C7DC9-38C2-4F5E-B924-A41F13606F53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{708C7DC9-38C2-4F5E-B924-A41F13606F53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{708C7DC9-38C2-4F5E-B924-A41F13606F53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB569EA6-3DE1-416E-B01B-A015B5B405CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB569EA6-3DE1-416E-B01B-A015B5B405CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB569EA6-3DE1-416E-B01B-A015B5B405CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB569EA6-3DE1-416E-B01B-A015B5B405CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
