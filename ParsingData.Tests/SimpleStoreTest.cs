@@ -10,33 +10,81 @@ namespace ParsingData.Tests
             //Arrange
             var writeTasks = new Task[4];
             var store = new SimpleStore();
-            var writeValues = new[] { "Hello", "world", "green", "red"};
-            var readValues = new[] { "green", "stop", "Hello", "green" };
-            var results = new byte[4][];
+            var writeValues = new[] {
+                new UserProfile
+                {
+                    Id = 1,
+                    CreatedAt = DateTime.Now,
+                    Username = "Anton"
+                },
+                new UserProfile
+                {
+                    Id = 2,
+                    CreatedAt = DateTime.Now,
+                    Username = "Alex",
+                },
+                new UserProfile
+                {
+                    Id = 3,
+                    CreatedAt = DateTime.Now,
+                    Username = "Pavel"
+                },
+                new UserProfile
+                {
+                    Id = 4,
+                    CreatedAt = DateTime.Now,
+                    Username = "Dima"
+                }};
+            var readValues = new[] {
+                new UserProfile
+                {
+                    Id = 3,
+                    CreatedAt = DateTime.Now,
+                    Username = "Pavel"
+                },
+                new UserProfile
+                {
+                    Id = 5,
+                    CreatedAt = DateTime.Now,
+                    Username = "Ivan"
+                },
+                new UserProfile
+                {
+                    Id = 1,
+                    CreatedAt = DateTime.Now,
+                    Username = "Anton"
+                },
+                new UserProfile
+                {
+                    Id = 3,
+                    CreatedAt = DateTime.Now,
+                    Username = "Pavel"
+                } };
+            var results = new UserProfile[4];
 
             //Act
             //на мой взгляд, проверить корректность данных в хранилище при многопоточной работе Get и Set несколько сложновато
             //т.к. примитив синхронизации гарантирует какой-либо доступ к ресурсу, но не определенный порядок выполнения действий
             //поэтому было решено запускать читателей в одном таске с паузами, чтобы можно было хоть как-то проверить результаты
             var readTask = Task.Run(async () => {
-                results[0] = store.Get(readValues[0]);
+                results[0] = store.Get(readValues[0].Id.ToString());
                 //имитация долгой работы, чтобы пока читатель думает, писатель что-то успел записать
                 await Task.Delay(2000);
 
-                results[1] = store.Get(readValues[1]);
+                results[1] = store.Get(readValues[1].Id.ToString());
                 await Task.Delay(2000);
 
-                results[2] = store.Get(readValues[2]);
+                results[2] = store.Get(readValues[2].Id.ToString());
                 await Task.Delay(2000);
 
-                results[3] = store.Get(readValues[3]);
+                results[3] = store.Get(readValues[3].Id.ToString());
                 await Task.Delay(2000);
             });
             for (int i=0; i< 4; i++)
             {
                 var local = i;
                 writeTasks[local] = Task.Run(() => {
-                    store.Set(writeValues[local], Encoding.UTF8.GetBytes(writeValues[local]));                                    
+                    store.Set(writeValues[local].Id.ToString(), writeValues[local]);                                    
                 });
             }
 
@@ -48,7 +96,7 @@ namespace ParsingData.Tests
             Assert.Equal(4, stats.GetCount);
             Assert.Equal(4, stats.SetCount);
             Assert.Null(results[0]);
-            Assert.Equal(readValues[3], Encoding.UTF8.GetString(results[3]));
+            Assert.Equal(readValues[3], results[3]);
 
         }
     }

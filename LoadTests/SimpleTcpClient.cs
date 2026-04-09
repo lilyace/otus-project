@@ -1,6 +1,8 @@
-﻿using System.Buffers;
+﻿using ParsingData;
+using System.Buffers;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 
 namespace LoadTests
 {
@@ -23,9 +25,10 @@ namespace LoadTests
             await _socket.ConnectAsync(_host, _port);  
         }
 
-        public async Task SetAsync(string key, byte[] value)
+        public async Task SetAsync(string key, UserProfile profile)
         {
-            var data = Encoding.UTF8.GetBytes($"SET {key} ").Concat(value).ToArray();
+            var value = JsonSerializer.Serialize(profile);
+            var data = Encoding.UTF8.GetBytes($"SET {key} ").Concat(Encoding.UTF8.GetBytes(value)).ToArray();
             await _socket.SendAsync(data);
         }
 

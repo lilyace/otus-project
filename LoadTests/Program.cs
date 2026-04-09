@@ -1,5 +1,6 @@
 ﻿using NBomber.Contracts;
 using NBomber.CSharp;
+using ParsingData;
 using System.Text;
 
 namespace LoadTests
@@ -16,8 +17,14 @@ namespace LoadTests
                     using var client = new SimpleTcpClient("127.0.0.1", 8080);
                     try
                     {
+                        var profile = new UserProfile
+                        {
+                            Id = 1,
+                            CreatedAt = DateTime.Now,
+                            Username = "Sasha"
+                        };
                         await client.ConnectAsync();
-                        await client.SetAsync("hello", Encoding.UTF8.GetBytes("123"));
+                        await client.SetAsync("hello", profile);
                         return Response.Ok();
                     }
                     catch

@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 
 namespace TcpServer
 {
@@ -89,11 +90,12 @@ namespace TcpServer
             {
                 case "GET":
                     var value = _store.Get(result.Key.ToString());
-                    byte[] answer = value ?? Encoding.UTF8.GetBytes("null\r\n");
+                    byte[] answer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value));
                     await clientSocket.SendAsync(answer);
                     break;
                 case "SET":
-                    _store.Set(result.Key.ToString(), result.Value.ToArray());
+                    var profile = JsonSerializer.Deserialize<UserProfile>(result.Value);
+                    _store.Set(result.Key.ToString(), profile);
                     await clientSocket.SendAsync(Encoding.UTF8.GetBytes("Ok"));
                     break;
                 case "DELETE":

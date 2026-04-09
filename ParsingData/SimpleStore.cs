@@ -1,4 +1,6 @@
-﻿namespace ParsingData
+﻿using System.Text.Json;
+
+namespace ParsingData
 {
     public class SimpleStore: IDisposable
     {
@@ -11,12 +13,14 @@
 
         public (long SetCount, long GetCount, long DeleteCount) GetStatistics() =>
             new(_setCount, _getCount, _deleteCount);
+
         /// <summary> Добавляет или обновляет значения по ключу </summary>
-        public void Set(string key, byte[] value)
+        public void Set(string key, UserProfile profile)
         {
             _lock.EnterWriteLock();
             try
             {
+                var value = JsonSerializer.SerializeToUtf8Bytes(profile);
                 _storage[key] = value;
                 Interlocked.Increment(ref _setCount);
             }
@@ -27,13 +31,14 @@
         }
 
         /// <summary> Возвращает значение по ключу или null, если ключ не найден </summary>
-        public byte[] Get(string key)
+        public UserProfile Get(string key)
         {
             _lock.EnterReadLock();
             try
             {
-                var result = _storage.TryGetValue(key, out var val) ? val : null;
+                var value = _storage.TryGetValue(key, out var val) ? val : null;
                 Interlocked.Increment(ref _getCount);
+                var result = value != null ? JsonSerializer.Deserialize<UserProfile>(value) : null;
                 return result;
             }
             finally 
