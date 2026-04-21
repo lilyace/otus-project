@@ -58,13 +58,9 @@ namespace ParsingData.Generators
             sb.AppendLine("{");
             sb.AppendLine("using (BinaryWriter writer = new BinaryWriter(stream))");
             sb.AppendLine("{");
-            var names = new List<string>(); //$"$\"\\\"{name}\\\" : \\\"{{name}}\\\"\\\"" -> 
+            var names = new List<string>(); 
             foreach (var property in properties) {
-               // if (property.Type.Name != "DateTime")
                     names.Add($"\\\"{property.Name}\\\" : \\\"{{{property.Name}}}\\\"");
-               // else
-
-                //sb.AppendLine($"writer.Write({name});");
             }
             var str = string.Join(",", names);
             sb.AppendLine($"writer.Write($\"{{{{{str}}}}}\");");
