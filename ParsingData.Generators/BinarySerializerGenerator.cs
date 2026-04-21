@@ -47,6 +47,8 @@ namespace ParsingData.Generators
 
         private string GeneratesCustomSerializer(string @namespace, string className, IEnumerable<IPropertySymbol> properties)
         {
+            //вариантов было два. Второй находится в другом коммите.
+            //остановилась на этом т.к. с точки зрения бенчмарка он чуть-чуть пошустрее
             var sb = new StringBuilder();
             sb.AppendLine("using System;");
             sb.AppendLine($"namespace {@namespace}");
@@ -60,10 +62,14 @@ namespace ParsingData.Generators
             sb.AppendLine("{");
             var names = new List<string>(); 
             foreach (var property in properties) {
-                    names.Add($"\\\"{property.Name}\\\" : \\\"{{{property.Name}}}\\\"");
+                // names.Add($"\\\"{property.Name}\\\" : \\\"{{{property.Name}}}\\\"");
+                if (property.Type.Name != "DateTime")
+                    sb.AppendLine($"writer.Write({property.Name});");
+                else
+                    sb.AppendLine($"writer.Write({property.Name}.ToString());");
             }
-            var str = string.Join(",", names);
-            sb.AppendLine($"writer.Write($\"{{{{{str}}}}}\");");
+           // var str = string.Join(",", names);
+            //sb.AppendLine($"writer.Write($\"{{{{{str}}}}}\");");
             sb.AppendLine("}");
             sb.AppendLine("return stream.ToArray();");
             sb.AppendLine("}");
