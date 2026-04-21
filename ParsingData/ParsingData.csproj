@@ -7,4 +7,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ParsingData.Generators\ParsingData.Generators.csproj" OutputItemType ="Analyzer"
+                      ReferenceOutputAssembly="false"/>
+  </ItemGroup>
+
 </Project>

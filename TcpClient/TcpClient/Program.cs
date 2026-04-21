@@ -1,5 +1,7 @@
-﻿using System.Net.Sockets;
+﻿using ParsingData;
+using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 
 namespace TcpClient
 {
@@ -7,10 +9,17 @@ namespace TcpClient
     {
         static async Task Main(string[] args)
         {
+            var testData = new UserProfile
+            {
+                Id = 1,
+                CreatedAt = DateTime.Now,
+                Username = "Sasha"
+            };
+            var textTestValue = JsonSerializer.Serialize(testData);
             var data = new[]
             {
-                "SET hello 123\n",
-                "GET 123\n",
+                $"SET hello {textTestValue}\n",
+                $"GET {textTestValue}\n",
                 "GET hello\n",
                 "SET bye\n",
                 "DELETE hello\n",

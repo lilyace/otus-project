@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 
 namespace ParsingData
 {
@@ -20,8 +21,11 @@ namespace ParsingData
             _lock.EnterWriteLock();
             try
             {
-                var value = JsonSerializer.SerializeToUtf8Bytes(profile);
-                _storage[key] = value;
+                using (var stream = new MemoryStream()) {
+                    var value = profile.SerializeToBinary(stream);
+                    //var value = JsonSerializer.SerializeToUtf8Bytes(profile);
+                    _storage[key] = value;
+                }
                 Interlocked.Increment(ref _setCount);
             }
             finally

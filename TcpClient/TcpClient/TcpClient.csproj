@@ -7,4 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="ParsingData">
+      <HintPath>..\..\TcpServer\bin\Debug\net9.0\ParsingData.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

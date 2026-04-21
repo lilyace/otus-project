@@ -1,4 +1,5 @@
-﻿using NBomber.Contracts;
+﻿using BenchmarkDotNet.Running;
+using NBomber.Contracts;
 using NBomber.CSharp;
 using ParsingData;
 using System.Text;
@@ -38,9 +39,15 @@ namespace LoadTests
                 .WithWarmUpDuration(TimeSpan.FromSeconds(10))
                 .WithLoadSimulations(Simulation.Inject(100, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30)));
 
-            NBomberRunner
+           /* NBomberRunner
             .RegisterScenarios(scenario)
-            .Run();
+            .Run();*/
+
+            Console.WriteLine("Start benchmark");
+
+            var summary = BenchmarkRunner.Run<BinarySerializerBenchmark>();
+
+            Console.WriteLine("Benchmarks finished.");
         }
     }
 }
