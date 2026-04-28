@@ -9,6 +9,15 @@ namespace ParsingData.Generators
     [Generator]
     public class BinarySerializerGenerator : ISourceGenerator
     {
+        private static readonly DiagnosticDescriptor UnsupportedTypeRule =
+            new DiagnosticDescriptor(
+                "SG0001",
+                "Unsupported property type",
+                "Property '{0}' in type '{1}' has unsupported type '{2}' for binary serialization",
+                "GenerateSerializer",
+                DiagnosticSeverity.Error,
+                true);
+
         public void Execute(GeneratorExecutionContext context)
         {
             /*if (!Debugger.IsAttached)
@@ -58,15 +67,26 @@ namespace ParsingData.Generators
             sb.AppendLine("{");
             sb.AppendLine("public byte[] SerializeToBinary(MemoryStream stream)");
             sb.AppendLine("{");
-            sb.AppendLine("using (BinaryWriter writer = new BinaryWriter(stream))");
+            sb.AppendLine("using (BinaryWriter writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, true))");
             sb.AppendLine("{");
             var names = new List<string>(); 
             foreach (var property in properties) {
+                if (property.Type.Name == "String")
+                {
+                    sb.AppendLine("var bytes = System.Text.Encoding.UTF8.GetBytes(this." + property.Name + ");");
+                    sb.AppendLine("//writer.Write(bytes.Length);");
+                    sb.AppendLine("writer.Write(bytes);");
+                }
                 // names.Add($"\\\"{property.Name}\\\" : \\\"{{{property.Name}}}\\\"");
-                if (property.Type.Name != "DateTime")
+                else if (property.Type.Name != "DateTime")
                     sb.AppendLine($"writer.Write({property.Name});");
                 else
-                    sb.AppendLine($"writer.Write({property.Name}.ToString());");
+                {
+                    sb.AppendLine($"var strDate = {property.Name}.ToString();");
+                    sb.AppendLine("var bytes1 = System.Text.Encoding.UTF8.GetBytes(strDate);");
+                    sb.AppendLine("writer.Write(bytes1);");
+                    sb.AppendLine($"//writer.Write({property.Name}.ToString());");
+                }
             }
            // var str = string.Join(",", names);
             //sb.AppendLine($"writer.Write($\"{{{{{str}}}}}\");");

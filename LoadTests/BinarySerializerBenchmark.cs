@@ -9,6 +9,9 @@ namespace LoadTests
     {
         private UserProfile profile;
 
+        private readonly JsonSerializerOptions _stjOptions =
+            new JsonSerializerOptions(JsonSerializerDefaults.General);
+
         [GlobalSetup]
         public void GlobalSetup()
         {
@@ -23,7 +26,7 @@ namespace LoadTests
         [Benchmark(Baseline = true, Description = "Text.Json serialization")]
         public void TextJsonSerialization()
         {  
-            JsonSerializer.SerializeToUtf8Bytes(profile);
+            JsonSerializer.SerializeToUtf8Bytes(profile, _stjOptions);
         }
 
         [Benchmark(Description = "Binary serialization")]
