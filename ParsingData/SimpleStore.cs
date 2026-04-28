@@ -22,8 +22,8 @@ namespace ParsingData
             try
             {
                 using (var stream = new MemoryStream()) {
-                    var value = profile.SerializeToBinary(stream);
-                    //var value = JsonSerializer.SerializeToUtf8Bytes(profile);
+                    //var value = profile.SerializeToBinary(stream);
+                    var value = JsonSerializer.SerializeToUtf8Bytes(profile);
                     _storage[key] = value;
                 }
                 Interlocked.Increment(ref _setCount);
