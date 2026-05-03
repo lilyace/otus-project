@@ -9,18 +9,16 @@ using System.Text.Json;
 
 namespace TcpServer
 {
-    public class TcpServer
+    public class TcpServer: IDisposable
     {
         ArrayPool<byte> pool = ArrayPool<byte>.Shared;
         private readonly SimpleStore _store;
         private readonly SemaphoreSlim _maxConnectionsSemaphore;
-        private readonly ActivitySource _activitySource;
 
-        public TcpServer(SimpleStore store, ActivitySource activitySource, int maxConnections = 100)
+        public TcpServer(SimpleStore store, int maxConnections = 100)
         {
             _store = store;
             _maxConnectionsSemaphore = new SemaphoreSlim(maxConnections, maxConnections);
-            _activitySource = activitySource;
         }
 
         public async Task StartAsync()
@@ -93,12 +91,11 @@ namespace TcpServer
         {
             var rec = buffer.AsSpan().Slice(startIndex, endIndex);
             var result = CommandParser.Parse(rec);
-            using (var activity = _activitySource.StartActivity("CommandProcessing", ActivityKind.Server))
+            var counter = Telemetry.MyMeter.CreateCounter<int>("commandsCount");
+            var histogram = Telemetry.MyMeter.CreateHistogram<long>("time");
+            using (var activity = Telemetry.MyActivitySource.StartActivity("CommandProcessing", ActivityKind.Server))
             {
                 activity?.SetTag("command.name", result.Command.ToString());
-                var meter = new Meter("MyMeter");
-                var counter = meter.CreateCounter<int>("commandsCount");
-                var histogram = meter.CreateHistogram<long>("time");
                 var sw = new Stopwatch();
                 sw.Start();
                 switch (result.Command)
@@ -126,6 +123,11 @@ namespace TcpServer
                 counter.Add(1);
                 activity?.AddEvent(new ActivityEvent("Command handled"));
             }
+        }
+
+        public void Dispose()
+        {
+            _maxConnectionsSemaphore.Dispose();
         }
     }
 }

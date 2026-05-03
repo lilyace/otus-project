@@ -8,7 +8,6 @@ namespace TcpServer
 {
     internal class Program
     {
-        private static readonly ActivitySource MyActivitySource = new ActivitySource("ActivitySource");
         static async Task Main(string[] args)
         {
             using var tracerProvider = Sdk.CreateTracerProviderBuilder()
@@ -24,7 +23,7 @@ namespace TcpServer
 
             using (var store = new ParsingData.SimpleStore())
             { 
-                var server = new TcpServer(store, MyActivitySource);
+                using var server = new TcpServer(store);
                 await server.StartAsync();
             }
         }
