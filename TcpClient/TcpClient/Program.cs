@@ -1,7 +1,9 @@
 ﻿using ParsingData;
+using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TcpClient
 {
@@ -23,7 +25,7 @@ namespace TcpClient
                 "GET hello\n",
                 "SET bye\n",
                 "DELETE hello\n",
-                "GET hello\n"
+                "GET hello\nSET Hi test\nGET Hi\n"
             };
 
             using var clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -31,14 +33,22 @@ namespace TcpClient
             {
                 await clientSocket.ConnectAsync("127.0.0.1", 8080);
                 foreach (var item in data) {
-                    var buffer = new byte[1024];
                     var requestData = Encoding.UTF8.GetBytes(item);
-                    await clientSocket.SendAsync(requestData);
-                    await clientSocket.ReceiveAsync(buffer);
-                    Console.WriteLine(Encoding.UTF8.GetString(buffer));
+                    await clientSocket.SendAsync(requestData);                  
 
                 }
+
+                var buffer = new byte[1024];
+                while (true)
+                {
+                    var resultByte = await clientSocket.ReceiveAsync(buffer);
+                    if (resultByte == 0)
+                        break;
+                    Console.WriteLine(Encoding.UTF8.GetString(buffer));
+                    Array.Clear(buffer, 0, buffer.Length);
+                }
                 Console.WriteLine("Done");
+                Console.ReadKey();
             }
             catch (Exception ex)
             {

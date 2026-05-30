@@ -8,5 +8,7 @@ namespace ParsingData
         public int Id { get; set; }
         public string Username { get; set; }
         public DateTime CreatedAt { get; set; }
+
+       // public List<string> TodoList { get; set; }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using ParsingData;
 using System.Buffers;
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -52,20 +51,25 @@ namespace TcpServer
 
                         var returnCarriage = (byte)'\n';
                         var separatorInd = Array.IndexOf(buffer, returnCarriage);
-                        var spanText = buffer.AsSpan();
+                        var trimBuffer = buffer[0..(bytesCount)];
+                       // buffer[bytesCount - 1] = returnCarriage;
+
                         var startIndex = 0;
-                        for(int i=0; i<bytesCount; i++)
+                        //на тот случай, если одним запросом нам придет несколько команд
+                        //разделенных \n
+                        for (int i = 0; i < buffer.Length; i++)
                         {
                             if (buffer[i] != returnCarriage)
                                 continue;
                             else
                             {
-                                await ProcessDataAsync(buffer, startIndex, i, clientSocket);
-                                startIndex = i;
+                                var answer = ProcessData(trimBuffer, startIndex, i - startIndex);
+                                await clientSocket.SendAsync(Encoding.UTF8.GetBytes(answer));
+                                startIndex = i + 1;
                             }
                         }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Console.WriteLine(ex.Message);
                     }
@@ -87,9 +91,9 @@ namespace TcpServer
             }
         }
 
-        private async Task ProcessDataAsync(byte[] buffer, int startIndex, int endIndex, Socket clientSocket)
+        private string ProcessData(byte[] buffer, int startIndex, int length)
         {
-            var rec = buffer.AsSpan().Slice(startIndex, endIndex);
+            var rec = buffer.AsSpan().Slice(startIndex, length);
             var result = CommandParser.Parse(rec);
             var counter = Telemetry.MyMeter.CreateCounter<int>("commandsCount");
             var histogram = Telemetry.MyMeter.CreateHistogram<long>("time");
@@ -98,30 +102,31 @@ namespace TcpServer
                 activity?.SetTag("command.name", result.Command.ToString());
                 var sw = new Stopwatch();
                 sw.Start();
+                var answer = string.Empty;
                 switch (result.Command)
                 {
                     case "GET":
                         var value = _store.Get(result.Key.ToString());
-                        byte[] answer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value));
-                        await clientSocket.SendAsync(answer);
+                        answer = JsonSerializer.Serialize(value != null ? Encoding.UTF8.GetString(value) : null);
                         break;
                     case "SET":
-                        var profile = JsonSerializer.Deserialize<UserProfile>(result.Value);
-                        _store.Set(result.Key.ToString(), profile);
-                        await clientSocket.SendAsync(Encoding.UTF8.GetBytes("Ok"));
+                        _store.Set(result.Key.ToString(), result.Value.ToArray());
+                        answer = "Ok";
                         break;
                     case "DELETE":
                         _store.Delete(result.Key.ToString());
-                        await clientSocket.SendAsync(Encoding.UTF8.GetBytes("Ok"));
+                        answer = "Ok";
                         break;
                     default:
-                        await clientSocket.SendAsync(Encoding.UTF8.GetBytes("Error: Unknown command"));
+                        answer = "Error: Unknown command";
                         break;
                 }
                 sw.Stop();
                 histogram.Record(sw.ElapsedMilliseconds);
+                activity?.SetTag("command.duration", sw.Elapsed);
                 counter.Add(1);
                 activity?.AddEvent(new ActivityEvent("Command handled"));
+                return answer;
             }
         }
 

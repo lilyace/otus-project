@@ -39,13 +39,13 @@ namespace LoadTests
                 .WithWarmUpDuration(TimeSpan.FromSeconds(10))
                 .WithLoadSimulations(Simulation.Inject(100, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30)));
 
-           /* NBomberRunner
+             NBomberRunner
             .RegisterScenarios(scenario)
-            .Run();*/
+            .Run();
 
             Console.WriteLine("Start benchmark");
 
-            var summary = BenchmarkRunner.Run<BinarySerializerBenchmark>();
+            var summary = BenchmarkRunner.Run<ParserBenchmark>();
 
             Console.WriteLine("Benchmarks finished.");
         }

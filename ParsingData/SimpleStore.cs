@@ -16,15 +16,14 @@ namespace ParsingData
             new(_setCount, _getCount, _deleteCount);
 
         /// <summary> Добавляет или обновляет значения по ключу </summary>
-        public void Set(string key, UserProfile profile)
+        public void Set(string key, byte[] data)
         {
             _lock.EnterWriteLock();
             try
             {
-                using (var stream = new MemoryStream()) {
-                    //var value = profile.SerializeToBinary(stream);
-                    var value = JsonSerializer.SerializeToUtf8Bytes(profile);
-                    _storage[key] = value;
+                using (var stream = new MemoryStream()) 
+                {
+                    _storage[key] = data;
                 }
                 Interlocked.Increment(ref _setCount);
             }
@@ -35,14 +34,13 @@ namespace ParsingData
         }
 
         /// <summary> Возвращает значение по ключу или null, если ключ не найден </summary>
-        public UserProfile Get(string key)
+        public byte[] Get(string key)
         {
             _lock.EnterReadLock();
             try
             {
-                var value = _storage.TryGetValue(key, out var val) ? val : null;
+                var result = _storage.TryGetValue(key, out var val) ? val : null;
                 Interlocked.Increment(ref _getCount);
-                var result = value != null ? JsonSerializer.Deserialize<UserProfile>(value) : null;
                 return result;
             }
             finally 
